@@ -103,7 +103,9 @@ Visualization Manager:
       Topic: /test_optim_node/teb_poses
       Unreliable: false
       Value: true
-    - Class: rviz/Marker
+    - Alpha: 1
+      Class: rviz/Marker
+      Color: 0; 0; 255
       Enabled: true
       Marker Topic: /test_optim_node/teb_markers
       Name: Marker
