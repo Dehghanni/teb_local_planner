@@ -73,7 +73,7 @@ namespace teb_local_planner
 class EdgeTimeOptimal : public BaseTebUnaryEdge<1, double, VertexTimeDiff>
 {
 public:
-    
+ 
   /**
    * @brief Construct edge.
    */
@@ -82,6 +82,7 @@ public:
     this->setMeasurement(0.);
   }
   
+
   /**
    * @brief Actual cost function
    */
@@ -90,10 +91,23 @@ public:
     ROS_ASSERT_MSG(cfg_, "You must call setTebConfig on EdgeTimeOptimal()");
     const VertexTimeDiff* timediff = static_cast<const VertexTimeDiff*>(_vertices[0]);
 
-   _error[0] = timediff->dt();
-  
-    ROS_ASSERT_MSG(std::isfinite(_error[0]), "EdgeTimeOptimal::computeError() _error[0]=%f\n",_error[0]);
+//   _error[0] = timediff->dt();
+   _error[0] = w * timediff->dt();	//Change the cost function \Delta T_i^2 to \W_k*Delta T_i^2
+//   _error[0] *= _error[0]
+
+   ROS_ASSERT_MSG(std::isfinite(_error[0]), "EdgeTimeOptimal::computeError() _error[0]=%f\n",_error[0]);
   }
+
+  /**
+  * @brief set weight \W_k multiplier 
+  *
+  *
+  * */
+  void setw (double a =1)
+  {
+        w = a;
+  }
+
 
 #ifdef USE_ANALYTIC_JACOBI
   /**
@@ -109,6 +123,7 @@ public:
   
 public:        
   EIGEN_MAKE_ALIGNED_OPERATOR_NEW
+  double w=1;
 };
 
 }; // end namespace

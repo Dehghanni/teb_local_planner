@@ -37,6 +37,8 @@
  *********************************************************************/
 
 #include <teb_local_planner/optimal_planner.h>
+#include <teb_local_planner/timed_elastic_band.h>
+#include <teb_local_planner/g2o_types/edge_kinematics.h>
 #include <map>
 #include <memory>
 #include <limits>
@@ -889,7 +891,26 @@ void TebOptimalPlanner::AddEdgesTimeOptimal()
     timeoptimal_edge->setVertex(0,teb_.TimeDiffVertex(i));
     timeoptimal_edge->setInformation(information);
     timeoptimal_edge->setTebConfig(*cfg_);
-    optimizer_->addEdge(timeoptimal_edge);
+
+/* "Trajectory Density"
+ * Purpose: Change Time cost function Sigma(deltaT^2) to Sigma(Wk*deltaT^2)
+ * Wk is related to curvature of the path 
+ * To have a more precise trajectory we need to have more confgurations, but more configurations will increase calculations 
+ * Here is a method to identicate where it is necessary to have an accurate path
+ * A good criteria can be the curvature of the path, it means we need more precise trajectories in turns and squares and ...
+ * Therefore we are going to calculate Wk in relation to curvature of the path and implies it to "delta_T^2" 
+ * The bigger "Wk" the smaller "delta_T"s and then more configurations
+ * Here is how we calculate "Wk" multipliers
+ * */
+  VertexPose* conf1 = teb_.PoseVertex(i);
+  VertexPose* conf2 = teb_.PoseVertex(i+1);
+  Eigen::Vector2d deltaS = conf2->position() - conf1->position();
+  double angle_diff = g2o::normalize_theta( conf2->theta() - conf1->theta() );
+  double radius_cost = 1/(deltaS.norm() / fabs(angle_diff));
+  timeoptimal_edge->setw(radius_cost);
+
+  optimizer_->addEdge(timeoptimal_edge);
+
   }
 }
 
